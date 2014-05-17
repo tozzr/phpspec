@@ -16,31 +16,43 @@ class PhpSpec {
 }
 
 $phpSpec = new PhpSpec();
+$level = -1;
 
 function describe($description, $block) {
+	global $level;
+	$l = ++$level;
+	
 	$block();
+	
+	if ($l == 0) {
+		global $phpSpec;
+		$count = $phpSpec->passed + $phpSpec->failed;
+		echo PHP_EOL . PHP_EOL . $count . " Test" . ($count == 1 ? "" : "s") . ": ";
+		echo $phpSpec->passed . " passed, " . $phpSpec->failed . " failed";
+		echo PHP_EOL;
+	}
+}
+
+function it() {
+	if (func_num_args() != 2)
+		throw new Exception("it() takes 2 arguments");
+	
+	$description = func_get_arg(0);
+	$block = func_get_arg(1);
 
 	global $phpSpec;
-	echo PHP_EOL . $phpSpec->passed . " passed, " . $phpSpec->failed . " failed";
-	echo PHP_EOL;
-}
-
-function it($description, $block) {
-	$block();
-}
-
-function expect($lambda) {
-	return new ExpressionMatcher($lambda);
+	try {
+		$block();
+		$phpSpec->pass();
+	}
+	catch (Exception $ex) {
+		$phpSpec->fail($ex->getMessage());
+	}
 }
 
 function assertThat($actual, $matcher) {
-	global $phpSpec;
-	if ($matcher->matches($actual))
-		$phpSpec->pass();
-	else {
-		$phpSpec->fail($actual . ' expected but was ' . $matcher->expected);
-		return false;
-	}
+	if (!$matcher->matches($actual))
+		throw new Exception($actual . ' expected but was ' . $matcher->expected);
 }
 
 function is($expected) {
@@ -60,7 +72,11 @@ class IsMatcher {
 	}
 }
 
-class ExpressionMatcher {
+function expect($expression) {
+	return new Expectation($expression);
+}
+
+class Expectation {
 
 	private $expression;
 
@@ -68,8 +84,16 @@ class ExpressionMatcher {
 		$this->expression = $expression;
 	}
 
-	function to_fail() {
-		return $this->expression == false;
+	function to_throw($message) {
+		try {
+			$exp = $this->expression;
+			$exp();
+			throw new Exception("did not");
+		}
+		catch (Exception $ex) {
+			if ($ex->getMessage() != $message)
+				throw new Exception("expected to throw '" . $message . "', but " . $ex->getMessage());
+		}
 	}
 }
 
