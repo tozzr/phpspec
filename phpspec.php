@@ -13,23 +13,35 @@ class PhpSpec {
   	$this->failed++;
   	echo PHP_EOL . $message . PHP_EOL;
   }
+
+  function log() {
+  	$count = $this->passed + $this->failed;
+		echo PHP_EOL . PHP_EOL . $count . " Test" . ($count == 1 ? "" : "s") . ": ";
+		echo $this->passed . " passed, " . $this->failed . " failed" . PHP_EOL;
+		echo PHP_EOL;
+  }
 }
 
 $phpSpec = new PhpSpec();
-$level = -1;
+$level = 0;
 
-function describe($description, $block) {
+function describe() {
+	if (func_num_args() != 2)
+		throw new Exception("describe() takes 2 arguments");
+	
+	$description = func_get_arg(0);
+	$block = func_get_arg(1);
+
 	global $level;
-	$l = ++$level;
+	$level++;
 	
 	$block();
 	
-	if ($l == 0) {
+	$level--;
+
+	if ($level == 0) {
 		global $phpSpec;
-		$count = $phpSpec->passed + $phpSpec->failed;
-		echo PHP_EOL . PHP_EOL . $count . " Test" . ($count == 1 ? "" : "s") . ": ";
-		echo $phpSpec->passed . " passed, " . $phpSpec->failed . " failed";
-		echo PHP_EOL;
+		$phpSpec->log();
 	}
 }
 
@@ -96,5 +108,10 @@ class Expectation {
 		}
 	}
 }
+
+if ($argv[1] != "")
+  include($argv[1]);
+else
+	echo "phpspec: no specs found" . PHP_EOL;
 
 ?>
