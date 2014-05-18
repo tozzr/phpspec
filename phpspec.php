@@ -109,9 +109,4 @@ class Expectation {
 	}
 }
 
-if ($argv[1] != "")
-  include($argv[1]);
-else
-	echo "phpspec: no specs found" . PHP_EOL;
-
 ?>
