@@ -2,20 +2,8 @@
 
 error_reporting(E_ALL);
 
-describe("phpSpec", function() {
+describe("assert", function() {
 	
-	describe("describe", function() {
-		it("takes 2 arguments", function() {
-			expect(function() { describe(); })->to_throw("describe() takes 2 arguments");
-		});
-	});
-
-	describe("it", function() {
-		it("takes 2 arguments", function() {
-			expect(function() { it(); })->to_throw("it() takes 2 arguments");
-		});
-	});
-
 	describe("assertThat", function() {
 		it("should pass simple matches", function() {
 			assertThat(1, is(1));

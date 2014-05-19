@@ -8,11 +8,32 @@ describe("phpSpec", function() {
 		it("takes 2 arguments", function() {
 			expect(function() { describe(); })->to_throw("describe() takes 2 arguments");
 		});
+		describe("foo", function() {
+			it("is silly", function() {
+				expect(1)->to_equal(1);
+			});
+		});
 	});
 
 	describe("it", function() {
 		it("takes 2 arguments", function() {
 			expect(function() { it(); })->to_throw("it() takes 2 arguments");
+		});
+	});
+
+	describe("beforeEach", function() {
+		$log = "";
+
+		beforeEach(function() use(&$log) {
+			$log .= "+";
+		});
+
+		it("should be executed before the first it block", function() use(&$log) {
+			expect($log)->to_equal("+");
+		});
+
+		it("should be executed before the second it block as well", function() use(&$log) {
+			expect($log)->to_equal("+");
 		});
 	});
 
