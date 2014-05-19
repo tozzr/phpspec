@@ -9,6 +9,8 @@ if (count($argv) == 1) {
         include($path . "/" . $file);
     	}
 		}
+		global $phpSpec;
+		$phpSpec->execute();
   }
 }
 else {

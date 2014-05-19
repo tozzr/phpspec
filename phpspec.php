@@ -3,22 +3,39 @@
 class PhpSpec {
   public $passed = 0;
   public $failed = 0;
-  
+  private $log = "";
+
   function pass() {
   	$this->passed++;
-  	echo '.';
+  	$this->log .= ".";
   }
 
   function fail($message) {
   	$this->failed++;
-  	echo PHP_EOL . $message . PHP_EOL;
+  	$this->log .= PHP_EOL . $message . PHP_EOL;
   }
 
-  function log() {
+  private function log() {
+  	echo $this->log . PHP_EOL . PHP_EOL;
+
   	$count = $this->passed + $this->failed;
-		echo PHP_EOL . PHP_EOL . $count . " Test" . ($count == 1 ? "" : "s") . ": ";
+		echo $count . " Test" . ($count == 1 ? "" : "s") . ": ";
 		echo $this->passed . " passed, " . $this->failed . " failed" . PHP_EOL;
 		echo PHP_EOL;
+  }
+
+  public function addSpec($description, $block) {
+  	try {
+			$block();
+			$this->pass();
+		}
+		catch (Exception $ex) {
+			$this->fail($ex->getMessage());
+		}
+  }
+
+  public function execute() {
+  	$this->log();
   }
 }
 
@@ -40,8 +57,8 @@ function describe() {
 	$level--;
 
 	if ($level == 0) {
-		global $phpSpec;
-		$phpSpec->log();
+		//global $phpSpec;
+		//$phpSpec->log();
 	}
 }
 
@@ -53,13 +70,7 @@ function it() {
 	$block = func_get_arg(1);
 
 	global $phpSpec;
-	try {
-		$block();
-		$phpSpec->pass();
-	}
-	catch (Exception $ex) {
-		$phpSpec->fail($ex->getMessage());
-	}
+	$phpSpec->addSpec($description, $block);
 }
 
 function assertThat($actual, $matcher) {
