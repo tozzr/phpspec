@@ -47,6 +47,11 @@ class PhpSpec {
   }
 
   public function evaluate() {
+  	//if (count($this->groups) == 0) {
+  	//	echo "no specs found" . PHP_EOL;
+  	//	return;
+  	//}
+
   	$start = microtime();
   	foreach ($this->groups as $g) {
   		$g->evaluate($this);
@@ -55,7 +60,7 @@ class PhpSpec {
   }
 
   private function log($time) {
-  	echo $this->log . PHP_EOL . PHP_EOL;
+  	echo $this->log . PHP_EOL;
   	echo "finished in " . round($time, 6) . " s" . PHP_EOL;
   	$count = $this->passed + $this->failed;
 		echo $count . " spec" . ($count == 1 ? "" : "s") . ": ";

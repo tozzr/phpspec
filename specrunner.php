@@ -1,23 +1,27 @@
 <?php
+include("phpspec.php");
+	
+$path = "";
 
-if (count($argv) == 1) {
+if (count($argv) == 1)
 	$path = getcwd() . "/spec";
-  if (is_dir($path)) {
-  	include("phpspec.php");
-  	foreach (scandir($path) as $file) {
-    	if ($file != "." && $file != "..") {
-        include($path . "/" . $file);
-    	}
+else
+	$path = $argv[1];
+
+if (is_dir($path))
+	foreach (scandir($path) as $file) {
+  	if ($file != "." && $file != "..") {
+      include($path . "/" . $file);
 		}
-		global $phpSpec;
-		$phpSpec->evaluate();
-  }
-}
-else {
-	if (is_file($argv[1])) {
-		include("phpspec.php");
-		include($argv[1]);
 	}
+else if (file_exists($path))
+	include($path);
+else {
+	echo $path . " not found" . PHP_EOL;
+  exit();
 }
+
+global $phpSpec;
+$phpSpec->evaluate();
 
 ?>
