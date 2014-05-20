@@ -19,15 +19,6 @@ class PhpSpec {
   	$this->log .= PHP_EOL . $message . PHP_EOL;
   }
 
-  private function log() {
-  	echo $this->log . PHP_EOL . PHP_EOL;
-
-  	$count = $this->passed + $this->failed;
-		echo $count . " Test" . ($count == 1 ? "" : "s") . ": ";
-		echo $this->passed . " passed, " . $this->failed . " failed" . PHP_EOL;
-		echo PHP_EOL;
-  }
-
   public function addSpecGroup($description, $block) {
   	$group = new SpecGroup($description);
   	$parent = $this->last;
@@ -48,40 +39,35 @@ class PhpSpec {
  	}
 
   public function addSpec($description, $block) {
-  	$this->last->addSpec($description);
-  	try {
-			$block();
-			$this->pass();
-		}
-		catch (Exception $ex) {
-			$this->fail($ex->getMessage());
-		}
+  	$this->last->addSpec(new Spec($description, $block));
   }
 
   public function addBeforeEach($block) {
-  	$block();
+  	$this->last->addBefore($block);
   }
 
-  public function execute() {
-  	$this->log();
-  	
+  public function evaluate() {
+  	$start = microtime();
   	foreach ($this->groups as $g) {
-  		$this->showGroup($g, "");
+  		$g->evaluate($this);
   	}
+  	$this->log(microtime()-$start);
   }
 
-  private function showGroup($g, $ident) {
-  	echo $ident . $g->getDescription() . PHP_EOL;
-  	foreach ($g->getSpecs() as $spec)
-  		echo "  " . $spec . PHP_EOL;
-  	foreach ($g->getChildren() as $child)
-  		$this->showGroup($child, $ident . "- ");
+  private function log($time) {
+  	echo $this->log . PHP_EOL . PHP_EOL;
+  	echo "finished in " . round($time, 6) . " s" . PHP_EOL;
+  	$count = $this->passed + $this->failed;
+		echo $count . " spec" . ($count == 1 ? "" : "s") . ": ";
+		echo $this->passed . " passed, " . $this->failed . " failed" . PHP_EOL;
+		echo PHP_EOL;
   }
 }
 
 class SpecGroup {
 	private $description;
 	private $children = array();
+	private $befores = array();
 	private $specs = array();
 
 	function __construct($description) {
@@ -92,7 +78,7 @@ class SpecGroup {
 		return $this->description;
 	}
 
-	public function addSpecGroup($group) {
+	public function addSpecGroup(SpecGroup $group) {
 		array_push($this->children, $group);
 	}
 
@@ -100,12 +86,49 @@ class SpecGroup {
 		return $this->children;
 	}
 
-	public function addSpec($spec) {
+	public function addBefore($block) {
+		array_push($this->befores, $block);
+	}
+
+	public function addSpec(Spec $spec) {
 		array_push($this->specs, $spec);
 	}
 
 	public function getSpecs() {
 		return $this->specs;
+	}
+
+	public function evaluate($logger) {
+		foreach ($this->specs as $spec) {
+			foreach ($this->befores as $before) {
+				$before();
+			}
+			$spec->evaluate($logger);
+		}
+
+		foreach ($this->children as $child)
+			$child->evaluate($logger);
+	}
+}
+
+class Spec {
+	private $description;
+	private $block;
+
+	function __construct($description, $block) {
+		$this->description = $description;
+		$this->block = $block;
+	}
+
+	public function evaluate($logger) {
+		try {
+			$block = $this->block;
+			$block();
+			$logger->pass();
+		}
+		catch (Exception $ex) {
+			$logger->fail($ex->getMessage());
+		}
 	}
 }
 
@@ -131,6 +154,11 @@ function beforeEach($block) {
 	global $phpSpec;
 	$phpSpec->addBeforeEach($block);
 };
+
+function pass() {
+	global $phpSpec;
+	$phpSpec->pass();
+}
 
 function assertThat($actual, $matcher) {
 	if (!$matcher->matches($actual))

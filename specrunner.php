@@ -10,7 +10,7 @@ if (count($argv) == 1) {
     	}
 		}
 		global $phpSpec;
-		$phpSpec->execute();
+		$phpSpec->evaluate();
   }
 }
 else {

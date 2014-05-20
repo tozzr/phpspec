@@ -1,16 +1,14 @@
 <?php
 
-error_reporting(E_ALL);
-
 describe("phpSpec", function() {
 	
 	describe("describe", function() {
 		it("takes 2 arguments", function() {
 			expect(function() { describe(); })->to_throw("describe() takes 2 arguments");
 		});
-		describe("foo", function() {
-			it("is silly", function() {
-				expect(1)->to_equal(1);
+		describe("describes can be nested", function() {
+			it("should be also evaluated", function() {
+				pass();
 			});
 		});
 	});
@@ -22,18 +20,32 @@ describe("phpSpec", function() {
 	});
 
 	describe("beforeEach", function() {
-		$log = "";
+		$x = "";
 
-		beforeEach(function() use(&$log) {
-			$log .= "+";
+		beforeEach(function() use(&$x) {
+			$x .= "x";
 		});
 
-		it("should be executed before the first it block", function() use(&$log) {
-			expect($log)->to_equal("+");
+		it("should be executed before the first it block", function() use(&$x) {
+			expect($x)->to_equal("x");
 		});
 
-		it("should be executed before the second it block as well", function() use(&$log) {
-			expect($log)->to_equal("+");
+		it("should be executed before the second it block as well", function() use(&$x) {
+			expect($x)->to_equal("xx");
+		});
+
+		describe("beforeEach in nested contexts", function() use (&$x) {
+			$y = "";
+
+			beforeEach(function() use(&$x, &$y) {
+				$x .= "x";
+				$y .= "y";
+			});
+
+			it("should execute all preceding beforeEachs", function() use(&$x, &$y) {
+				expect($x)->to_equal("xxx");
+				expect($y)->to_equal("y");
+			});
 		});
 	});
 
