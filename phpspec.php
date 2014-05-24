@@ -22,15 +22,14 @@ class PhpSpec {
   public function addSpecGroup($description, $block) {
   	$group = new SpecGroup($description);
   	$parent = $this->last;
+  	$group->setParent($parent);
 
-  	if ($this->groupIdent == 0) {
+  	if ($this->groupIdent == 0)
   		$this->groups[$this->groupIndex++] = $group;
-  		$this->last = $group;
-  	}
-  	else {
+  	else
   		$this->last->addSpecGroup($group);
-  		$this->last = $group;
-  	}
+  
+  	$this->last = $group;
   	
   	$this->groupIdent++;
   	$block();
@@ -43,15 +42,14 @@ class PhpSpec {
   }
 
   public function addBeforeEach($block) {
-  	$this->last->addBefore($block);
+  	$this->last->addBeforeEach($block);
+  }
+
+  public function addAfterEach($block) {
+  	$this->last->addAfterEach($block);
   }
 
   public function evaluate() {
-  	//if (count($this->groups) == 0) {
-  	//	echo "no specs found" . PHP_EOL;
-  	//	return;
-  	//}
-
   	$start = microtime();
   	foreach ($this->groups as $g) {
   		$g->evaluate($this);
@@ -61,10 +59,8 @@ class PhpSpec {
 
   private function log($time) {
   	echo $this->log . PHP_EOL;
-  	echo "finished in " . round($time, 6) . " s" . PHP_EOL;
-  	$count = $this->passed + $this->failed;
-		echo $count . " spec" . ($count == 1 ? "" : "s") . ": ";
-		echo $this->passed . " passed, " . $this->failed . " failed" . PHP_EOL;
+  	echo "finished in " . round($time, 6) . " seconds" . PHP_EOL;
+  	echo $this->passed . " passed, " . $this->failed . " failed" . PHP_EOL;
 		echo PHP_EOL;
   }
 }
@@ -73,7 +69,9 @@ class SpecGroup {
 	private $description;
 	private $children = array();
 	private $befores = array();
+	private $afters = array();
 	private $specs = array();
+	private $parent = NULL;
 
 	function __construct($description) {
 		$this->description = $description;
@@ -91,11 +89,16 @@ class SpecGroup {
 		return $this->children;
 	}
 
-	public function addBefore($block) {
+	public function addBeforeEach($block) {
 		array_push($this->befores, $block);
 	}
 
+	public function addAfterEach($block) {
+		array_push($this->afters, $block);
+	}
+
 	public function addSpec(Spec $spec) {
+		$spec->setGroup($this);
 		array_push($this->specs, $spec);
 	}
 
@@ -103,26 +106,50 @@ class SpecGroup {
 		return $this->specs;
 	}
 
+	public function setParent($parent) {
+		$this->parent = $parent;
+	}
+
 	public function evaluate($logger) {
 		foreach ($this->specs as $spec) {
-			foreach ($this->befores as $before) {
-				$before();
-			}
+			$this->executeBeforeEachs();
 			$spec->evaluate($logger);
+			$this->executeAfterEachs();
 		}
 
 		foreach ($this->children as $child)
 			$child->evaluate($logger);
+	}
+
+	public function executeBeforeEachs() {
+		if ($this->parent)
+			$this->parent->executeBeforeEachs();
+		foreach ($this->befores as $before) {
+			$before();
+		}
+	}
+
+	public function executeAfterEachs() {
+		foreach ($this->afters as $after) {
+			$after();
+		}
+		if ($this->parent)
+			$this->parent->executeAfterEachs();
 	}
 }
 
 class Spec {
 	private $description;
 	private $block;
+	private $group;
 
 	function __construct($description, $block) {
 		$this->description = $description;
 		$this->block = $block;
+	}
+
+	public function setGroup($group) {
+		$this->group = $group;
 	}
 
 	public function evaluate($logger) {
@@ -132,7 +159,7 @@ class Spec {
 			$logger->pass();
 		}
 		catch (Exception $ex) {
-			$logger->fail($ex->getMessage());
+			$logger->fail($this->group->getDescription() . "\n  " . $this->description . ":\n    " . $ex->getMessage());
 		}
 	}
 }
@@ -158,6 +185,11 @@ function it() {
 function beforeEach($block) {
 	global $phpSpec;
 	$phpSpec->addBeforeEach($block);
+};
+
+function afterEach($block) {
+	global $phpSpec;
+	$phpSpec->addAfterEach($block);
 };
 
 function pass() {
