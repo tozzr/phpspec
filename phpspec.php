@@ -249,4 +249,65 @@ class Expectation {
 	}
 }
 
+function double($name) {
+	return new Stub($name);
+}
+
+class Stub {
+	private $name;
+	private $functions = array();
+	private $lastFunction;
+
+	function __construct($name) {
+		$this->name = $name;
+	}
+
+	public function stub($funcName) {
+		if (array_key_exists($funcName, $this->functions))
+			$this->functions[$funcName]->setArgs(func_get_args());
+		else
+			$this->lastFunction = new StubMethod($funcName, func_get_args());
+		return $this;
+	}
+
+	public function returns($retValue) {
+		$f = $this->lastFunction;
+		$f->addReturn(function() use($retValue) { return $retValue; });
+		$this->functions[$f->getName()] = $f;
+	}
+
+	function __call($funcName, $args) {
+		$f = $this->functions[$funcName];
+		return $f->getReturn($args);
+	}
+}
+
+class StubMethod {
+	private $name;
+	private $args;
+	private $returns = array();
+
+	function __construct($name, $args) {
+		$this->name = $name;
+		$this->args = implode('_', $args);
+	}
+
+	public function getName() {
+		return $this->name; 
+	}
+	
+	public function setArgs($args) {
+		return $this->args = implode('_', $args); 
+	}
+
+	public function addReturn($block) {
+		$this->returns[$this->args] = $block;
+	}
+
+	public function getReturn($args) {
+		$prefix = $this->name . (count($args) == 0 ? '' : '_');
+		return $this->returns[$prefix . implode('_', $args)]();
+	}
+}
+
 ?>
