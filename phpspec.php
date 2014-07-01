@@ -233,8 +233,19 @@ class Expectation {
 
 	function to_equal($expected) {
 		if ($this->actual != $expected)
-			throw new Exception("expected \"" . $expected . "\", but was \"" . $this->actual . "\"");
+			throw new Exception("expected \"" . $this->toString($expected) . "\", but was \"" . $this->toString($this->actual) . "\"");
 	}
+
+  function toString($object) {
+    if (is_array($object)) {
+      $str = "array(";
+      for ($i = 0; $i < count($object); $i++)
+        $str .= $object[$i] . ($i < count($object)-1 ? "," : "");
+      $str .= ")";
+      return $str;
+    }
+    return "" . $object;
+  }
 
 	function to_throw($message) {
 		try {
@@ -244,7 +255,7 @@ class Expectation {
 		}
 		catch (Exception $ex) {
 			if ($ex->getMessage() != $message)
-				throw new Exception("expected to throw '" . $message . "', but " . $ex->getMessage());
+				throw new Exception("expected to throw '" . $message . "', but was '" . $ex->getMessage() . "'");
 		}
 	}
 }

@@ -110,6 +110,16 @@ describe("phpSpec", function() {
 		});
 	});
 
+	describe("to_equal for arrays", function() {
+		it("should compare two arrays for equality", function() {
+			expect(array())->to_equal(array());
+			expect(array('a'))->to_equal(array('a'));
+			expect(function() { 
+				expect(array('a','b'))->to_equal(array('b','a'));
+			})->to_throw('expected "array(b,a)", but was "array(a,b)"');
+		});
+	});
+
 });
 
 ?>
