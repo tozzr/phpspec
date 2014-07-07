@@ -1,7 +1,7 @@
 phpspec
 =======
 
-php clone of the beautiful rspec. with that in mind - you want your specs to like this:
+php clone of the beautiful rspec. with that in mind - you want your specs to read like this:
 
 ```php
 describe("some awesome feature", function() {
@@ -25,23 +25,21 @@ les doubles:
 
 ```php
 describe("test doubles", function() {
-	it("should imitate needed behaviour", function() {
+  it("should imitate needed behaviour", function() {
     $d = double("foo");
-    
     $d->stub("bar")->returns("bazz");
-	  
-	  expect($d->bar())->to_equal("bazz");
-	});
-		
-	it("should imitate needed behaviour depending on arguments", function() {
-		$d = double("foo");
-		
-		$d->stub("bar", "r")->returns("read");
-		$d->stub("bar", "w")->returns("write");
-		
-		expect($d->bar("r"))->to_equal("read");
-		expect($d->bar("w"))->to_equal("write");
-	});
+    expect($d->bar())->to_equal("bazz");
+  });
+  
+  it("should imitate needed behaviour depending on arguments", function() {
+    $d = double("foo");
+
+    $d->stub("bar")->with_args("r")->returns("read");
+    $d->stub("bar")->with_args("w")->returns("write");
+
+    expect($d->bar("r"))->to_equal("read");
+    expect($d->bar("w"))->to_equal("write");
+  });
 });
 ```
 

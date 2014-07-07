@@ -277,9 +277,14 @@ class Stub {
 
   public function stub($funcName) {
     if (array_key_exists($funcName, $this->functions))
-      $this->functions[$funcName]->setArgs(func_get_args());
+      $this->lastFunction = $this->functions[$funcName];
     else
-      $this->lastFunction = new StubMethod($funcName, func_get_args());
+      $this->lastFunction = new StubMethod($funcName);
+    return $this;
+  }
+
+  public function with_args($args) {
+    $this->lastFunction->setArgs(func_get_args());
     return $this;
   }
 
@@ -300,9 +305,9 @@ class StubMethod {
   private $args;
   private $returns = array();
 
-  function __construct($name, $args) {
+  function __construct($name) {
     $this->name = $name;
-    $this->args = implode('_', $args);
+    $this->setArgs(array());
   }
 
   public function getName() {
@@ -310,16 +315,15 @@ class StubMethod {
   }
   
   public function setArgs($args) {
-    return $this->args = implode('_', $args); 
+    $this->args = implode('_', $args); 
   }
 
-  public function addReturn($block) {
-    $this->returns[$this->args] = $block;
+  public function addReturn($retValue) {
+    $this->returns[$this->name . "_" . $this->args] = $retValue;
   }
 
   public function getReturn($args) {
-    $prefix = $this->name . (count($args) == 0 ? '' : '_');
-    return $this->returns[$prefix . implode('_', $args)]();
+    return $this->returns[$this->name . "_" . implode('_', $args)]();
   }
 }
 
