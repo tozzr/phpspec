@@ -233,6 +233,21 @@ class Expectation {
     $this->actual = $actual;
   }
 
+  function to_be_false() {
+    if ($this->actual === true)
+      throw new Exception("expected " . $this->toString($this->actual) . " to be false.");
+  }
+
+  function to_be_true() {
+    if ($this->actual === false)
+      throw new Exception("expected " . $this->toString($this->actual) . " to be true.");
+  }
+
+  function to_contain($expected) {
+    if (strpos($this->actual, $expected) === false)
+      throw new Exception("expected \"" . $this->toString($this->actual) . "\" to contain \"" . $this->toString($expected) . "\".");
+  }
+
   function to_equal($expected) {
     if ($this->actual != $expected)
       throw new Exception("expected \"" . $this->toString($expected) . "\", but was \"" . $this->toString($this->actual) . "\"");
@@ -246,6 +261,9 @@ class Expectation {
       $str .= ")";
       return $str;
     }
+    else if (gettype($object) == "boolean")
+      return $object == true ? "true" : "false";
+    else
     return "" . $object;
   }
 

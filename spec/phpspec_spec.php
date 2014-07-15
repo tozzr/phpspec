@@ -122,6 +122,40 @@ describe("phpSpec", function() {
 		});
 	});
 
+	describe("to_contain", function() {
+		it("should throw correct", function() {
+			expect(function() {
+				expect("abc")->to_contain("xyz");
+			})->to_throw('expected "abc" to contain "xyz".');
+		});
+
+		it("should work correct", function() {
+			expect("abc")->to_contain("a");
+		});
+	});
+
+	describe("to_be_true", function() {
+		it("should throw correct", function() {
+			expect(function() {
+				expect(false)->to_be_true();
+			})->to_throw('expected false to be true.');
+		});
+		it("should work correct", function() {
+			expect(1===1)->to_be_true();
+		});
+	});
+
+	describe("to_be_false", function() {
+		it("should throw correct", function() {
+			expect(function() {
+				expect(true)->to_be_false();
+			})->to_throw('expected true to be false.');
+		});
+		it("should work correct", function() {
+			expect(1===2)->to_be_false();
+		});
+	});
+
 });
 
 ?>
